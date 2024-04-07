@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+    <groupId>com.longfor.c10.lzyx</groupId>
+    <artifactId>c10-logistics</artifactId>
+    <packaging>pom</packaging>
+    <version>1.0.0-SNAPSHOT</version>
+    <modules>
+        <module>c10-logistics-client</module>
+        <module>c10-logistics-entity</module>
+        <module>c10-logistics-core</module>
+        <module>c10-logistics-dao</module>
+    </modules>
+    <properties>
+        <sonar.exclusions>
+            src/**/core/aop/**/*,
+            src/**/core/config/**/*,
+            src/**/core/controller/admin/**/*,
+            src/**/core/controller/internal/**/*,
+            src/**/core/controller/merchant/**/*,
+            src/**/core/controller/user/**/*,
+            src/**/core/controller/open/LogisticsOpenAddressController.java,
+            src/**/core/controller/LogisticsCommonBaseAddressController.java,
+            src/**/core/controller/LogisticsCommonDeliveryCompanyController.java,
+            src/**/core/controller/LogisticsCommonDeliveryController.java,
+            src/**/core/controller/LogisticsCommonReturnAddressController.java,
+            src/**/core/controller/LogisticsCommonShipAddressController.java,
+            src/**/core/controller/LogisticsCommonShopLogisticsController.java,
+            src/**/core/controller/LogisticsCommonFeeController.java,
+            src/**/core/controller/ProbingController.java,
+            src/**/core/exception/**/*,
+            src/**/core/factory/**/*,
+            src/**/core/mq/**/*,
+            src/**/core/schedule/**/*,
+            src/**/core/service/**/*,
+            src/**/core/util/**,
+            src/**/dao/service/**/*,
+            src/**/dao/mapper/**/*,
+            src/**/client/api/**/*,
+            src/**/client/entity/**/*,
+            src/**/entity/annotation/**/*,
+            src/**/entity/constant/**/*,
+            src/**/entity/dto/**/*,
+            src/**/entity/entity/*,
+            src/**/entity/enums/*,
+            src/**/entity/exception/**/*,
+            src/**/*Application.java
+        </sonar.exclusions>
+    </properties>
+    
+</project>

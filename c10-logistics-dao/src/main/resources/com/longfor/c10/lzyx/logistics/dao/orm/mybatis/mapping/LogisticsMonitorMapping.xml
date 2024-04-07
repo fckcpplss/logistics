@@ -1,0 +1,161 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.longfor.c10.lzyx.logistics.dao.mapper.LogisticsMonitorMapper">
+
+	<select id="queryDeliveryList" parameterType="com.longfor.c10.lzyx.logistics.entity.dto.admin.LogisticsMonitorListReqData" resultType="com.longfor.c10.lzyx.logistics.entity.dto.admin.LogisticsMonitorListResData">
+		SELECT
+		lo.org_id as orgId,
+		lo.org_name as orgName,
+		lo.shop_name as shopName,
+		le.delivery_no as deliveryNo,
+		lo.child_order_id AS childOrderId,
+		lo.receipt_name as receiptName,
+		lo.receipt_phone as receiptPhone,
+		lo.receipt_province as receiptProvince,
+		lo.receipt_city as receiptCity,
+		lo.receipt_address as receiptAddress,
+		le.logistics_status as logisticsStatus,
+		lo.create_time as orderCreateTime,
+		le.delivery_time as deliveryTime,
+		le.shop_logistics_id as shopLogisticsId,
+		le.logistics_type as feeType,
+		lo.goods_order_status as orderStatus,
+		lo.id as logisticsOrderId,
+		le.id as logisticsDeliveryId,
+		le.if_cancel as ifCancel,
+		le.company_code as companyCode,
+		GROUP_CONCAT(DISTINCT le.goods_ids) as logisticsGoodsIds,
+		le.attachment1,
+		IFNULL(le.remark,log.remark) as remark
+		FROM logistics_order lo
+		INNER JOIN logistics_delivery le on lo.id = le.logistics_order_id
+		INNER JOIN logistics_order_goods log ON lo.id = log.logistics_order_id
+		<where>
+			log.business_type IS NOT NULL
+			AND log.business_type != ''
+			and le.delivery_no is not null and le.delivery_no != ''
+			<if test="req.orgId != null and req.orgId != ''">
+				AND lo.org_id = #{req.orgId}
+			</if>
+			<if test="req.orgIds != null">
+				AND lo.org_id in
+				<foreach collection="req.orgIds" index="index" item="item" open="(" separator="," close=")">
+					#{item}
+				</foreach>
+			</if>
+			<if test="req.shopId != null and req.shopId != ''">
+				AND lo.shop_id = #{req.shopId}
+			</if>
+			<if test="req.shopIds != null">
+				AND lo.shop_id in
+				<foreach collection="req.shopIds" index="index" item="item" open="(" separator="," close=")">
+					#{item}
+				</foreach>
+			</if>
+			<if test="req.shopName != null and req.shopName != ''">
+				AND lo.shop_name like concat('%',#{req.shopName},'%')
+			</if>
+			<if test="req.goodsName != null and req.goodsName != ''">
+				AND log.goods_name like concat('%',#{req.goodsName},'%')
+			</if>
+
+			<if test="req.skuId != null  and req.skuId != ''">
+				AND log.sku_id = #{req.skuId}
+			</if>
+
+			<if test="req.deliveryNo != null  and req.deliveryNo != ''">
+				AND le.delivery_no = #{req.deliveryNo}
+			</if>
+			<if test="req.childOrderId != null  and req.childOrderId != ''">
+				AND lo.child_order_id = #{req.childOrderId}
+			</if>
+			<if test="req.receiptName != null  and req.receiptName != ''">
+				AND lo.receipt_name like concat('%',#{req.receiptName},'%')
+			</if>
+			<if test="req.receiptPhone != null  and req.receiptPhone != ''">
+				AND lo.receipt_phone like concat('%',#{req.receiptPhone},'%')
+			</if>
+			<if test="req.logisticsStatus != null">
+				AND le.logistics_status = #{req.logisticsStatus}
+			</if>
+			<if test="req.logisticsStatuss != null">
+				AND le.logistics_status in
+				<foreach collection="req.logisticsStatuss" index="index" item="item" open="(" separator="," close=")">
+					#{item}
+				</foreach>
+			</if>
+			<if test="req.orderStatus != null">
+				AND lo.goods_order_status = #{req.orderStatus}
+			</if>
+			<if test="req.orderStatuss != null">
+				AND lo.goods_order_status in
+				<foreach collection="req.orderStatuss" index="index" item="item" open="(" separator="," close=")">
+					#{item}
+				</foreach>
+			</if>
+
+			<if test="req.businessType != null">
+				AND log.business_type = #{req.businessType}
+			</if>
+			<if test="req.businessTypes != null">
+				AND log.business_type in
+				<foreach collection="req.businessTypes" index="index" item="item" open="(" separator="," close=")">
+					#{item}
+				</foreach>
+			</if>
+			<if test="req.feeType != null">
+				AND log.logistics_type = #{req.feeType}
+			</if>
+			<if test="req.logisticsType != null">
+				<choose>
+					<!--平台京东 -->
+					<when test="req.logisticsType == 1">
+						and le.logistics_type = 1 and le.company_code = 'jd'
+					</when>
+					<!--平台顺丰 -->
+					<when test="req.logisticsType == 2">
+						and le.logistics_type = 1 and le.company_code = 'shunfeng'
+					</when>
+					<!--商家顺丰 -->
+					<when test="req.logisticsType == 3">
+						and le.logistics_type = 2 and le.company_code = 'shunfeng' and le.shop_logistics_id is not null and le.shop_logistics_id != ''
+					</when>
+					<!--其他 -->
+					<when test="req.logisticsType == 4">
+						and le.logistics_type = 2 and (le.shop_logistics_id is null or le.shop_logistics_id = '')
+					</when>
+					<otherwise>
+						and 1 = 0
+					</otherwise>
+				</choose>
+			</if>
+			<if test="req.startOrderCreateTime != null and req.startOrderCreateTime != ''" >
+				and lo.create_time &gt;= #{req.startOrderCreateTime}
+			</if>
+
+			<if test="req.endOrderCreateTime != null and req.endOrderCreateTime != ''" >
+				and lo.create_time &lt;=  #{req.endOrderCreateTime}
+			</if>
+
+			<if test="req.startDeliveryCreateTime != null and req.startDeliveryCreateTime != ''" >
+				and le.create_time &gt;= #{req.startDeliveryCreateTime}
+			</if>
+
+			<if test="req.endDeliveryCreateTime != null and req.endDeliveryCreateTime != ''" >
+				and le.create_time &lt;=  #{req.endDeliveryCreateTime}
+			</if>
+
+			<if test="req.remark != null  and req.remark != ''">
+				AND le.remark like concat('%',#{req.remark},'%')
+			</if>
+
+			<if test="req.ifCancel != null">
+				AND le.if_cancel = #{req.ifCancel}
+			</if>
+
+		</where>
+		GROUP BY lo.child_order_id,le.delivery_no,le.if_cancel,le.logistics_status
+		ORDER BY le.delivery_time desc
+	</select>
+
+</mapper>

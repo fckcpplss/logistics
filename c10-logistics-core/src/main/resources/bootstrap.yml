@@ -1,0 +1,7 @@
+spring:
+  application:
+    name: c10-logistics-core
+  profiles:
+    active: ${profile:uat}
+
+

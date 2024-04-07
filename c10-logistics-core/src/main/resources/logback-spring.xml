@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--debug="false"关闭logback内部监控 -->
+<configuration debug="false">
+  <property name="LOG_PATH" value="${APP_HOME:-.}/logs" />
+  <!-- 引用公共配置 -->
+  <include resource="com/longfor/c2/starter/log/logback/base.xml" />
+  <jmxConfigurator />
+  <!-- 非生产环境环境. -->
+  <springProfile name="dev">
+    <logger name="com.longfor" level="INFO" />
+    <logger name="com.longfor.c10.lzyx.logistics.dao.mapper" level="DEBUG" />
+    <logger name="com.longfor.c10.lzyx.logistics.core" level="INFO" />
+    <root level="ERROR">
+      <appender-ref ref="CONSOLE" />
+      <appender-ref ref="FILE" />
+<!--       <appender-ref ref="ERROR" /> -->
+    </root>
+  </springProfile>
+  <springProfile name="test,sit,uat,pre">
+    <logger name="com.longfor.c10.lzyx.logistics.dao.mapper" level="DEBUG" />
+    <logger name="com.longfor" level="INFO" />
+    <logger name="com.longfor.c10.lzyx.logistics.core" level="INFO" />
+    <root level="INFO">
+      <appender-ref ref="CONSOLE" />
+      <appender-ref ref="FILE" />
+      <appender-ref ref="ERROR" />
+    </root>
+  </springProfile>
+  <!-- 生产环境. -->
+  <springProfile name="prod">
+    <logger name="com.longfor" level="INFO" />
+    <logger name="com.longfor.c10.lzyx.logistics.dao.mapper" level="DEBUG" />
+    <logger name="com.longfor.c10.lzyx.logistics.core" level="INFO" />
+    <logger name="com.github.thierrysquirrel" level="INFO" />
+    <root level="INFO">
+      <appender-ref ref="FILE" />
+      <appender-ref ref="ERROR" />
+      <appender-ref ref="ALIYUN" />
+    </root>
+  </springProfile>
+</configuration>

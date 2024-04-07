@@ -1,0 +1,14 @@
+##Apollo配置中心
+longfor: 
+  c2: 
+    apollo: 
+      enabled: true
+      env: SIT
+      meta: http://apolloconfig.longfor.sit
+      cluster: sit+9168b30bfec0afd25971a9c093ef34fcd5354cb3
+      eagerLoad: false
+      namespaces: application
+      privateKeyFileName: apollo_private_key-SIT
+      appId: c10-logistics
+
+

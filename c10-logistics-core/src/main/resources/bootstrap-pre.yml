@@ -1,0 +1,14 @@
+##Apollo配置中心
+longfor: 
+  c2: 
+    apollo: 
+      enabled: true
+      env: PRO
+      meta: https://apolloconfig.longhu.net
+      cluster: pre+a97231639baccf9f058794de6b8a715132d284ed
+      eagerLoad: false
+      namespaces: application
+      privateKeyFileName: apollo_private_key-PRO
+      appId: c10-logistics-core
+
+

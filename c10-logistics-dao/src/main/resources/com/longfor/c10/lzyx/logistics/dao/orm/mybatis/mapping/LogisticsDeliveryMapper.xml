@@ -1,0 +1,248 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.longfor.c10.lzyx.logistics.dao.mapper.LogisticsDeliveryMapper">
+    <select id="selectAdminNoSendList" parameterType="com.longfor.c10.lzyx.logistics.entity.dto.DeliveryNoSendListReq" resultType="com.longfor.c10.lzyx.logistics.entity.dto.admin.DeliveryNoSendListVO">
+        select
+        ld.child_order_id orderNo,
+        ld.org_name orgName,
+        ld.org_id orgId,
+        ld.shop_name shopName,
+        CONCAT_WS('',ld.`receipt_province`,ld.`receipt_city`,ld.`receipt_area`,ld.`receipt_address`) receiptAddress,
+        ld.receipt_name receiptName,
+        ld.receipt_phone receiptPhoneNumber,
+        ld.biz_channel_code as bizChannelCode,
+        ld.order_desc as orderDesc,
+        group_concat(distinct log.id) goodsIds,
+        log.logistics_type as logisticsType,
+        DATE_FORMAT(ld.create_time,'%Y-%m-%d %H:%i:%s') as orderCreateTime
+        from  logistics_order ld
+        left join logistics_order_goods log on ld.id = log.logistics_order_id
+        <where>
+            log.logistics_delivery_id is null and log.id is not null and ld.delete_status='0'
+            and  log.delete_status = '0'
+            <if test="req.orderNo != null and req.orderNo != ''">
+                AND ld.child_order_id =#{req.orderNo}
+            </if>
+            <if test="req.orgId != null and req.orgId != ''">
+                AND ld.org_id = #{req.orgId}
+            </if>
+            <if test="req.shopName != null and req.shopName != ''">
+                AND ld.shop_name like concat('%',#{req.shopName},'%')
+            </if>
+            <if test="req.goodsName != null and req.goodsName != ''">
+                AND log.goods_name like concat('%',#{req.goodsName},'%')
+            </if>
+            <if test="req.shopId != null and req.shopId != ''">
+                AND ld.shop_id = #{req.shopId}
+            </if>
+            <if test="req.shopIds != null and req.shopIds.size() > 0">
+                AND ld.shop_id in
+                <foreach collection="req.shopIds" index="index" item="item" open="(" separator="," close=")">
+                    #{item}
+                </foreach>
+            </if>
+            <if test="req.orgId != null and req.orgId != ''">
+                AND ld.org_id = #{req.orgId}
+            </if>
+            <if test="req.orgIds != null and req.orgIds.size() > 0">
+                AND ld.org_id in
+                <foreach collection="req.orgIds" index="index" item="item" open="(" separator="," close=")">
+                    #{item}
+                </foreach>
+            </if>
+            <if test="req.logisticsType != null">
+                AND log.logistics_type = #{req.logisticsType}
+            </if>
+            <if test="req.startOrderCreateTime != null and req.startOrderCreateTime != ''" >
+                and ld.create_time &gt;= #{req.startOrderCreateTime}
+            </if>
+
+            <if test="req.endOrderCreateTime != null and req.endOrderCreateTime != ''" >
+                and ld.create_time &lt;=  #{req.endOrderCreateTime}
+            </if>
+            <if test="req.bizChannelCodes != null and req.bizChannelCodes.size() > 0">
+                AND ld.biz_channel_code in
+                <foreach collection="req.bizChannelCodes" index="index" item="item" open="(" separator="," close=")">
+                    #{item}
+                </foreach>
+            </if>
+        </where>
+        group by ld.child_order_id,ld.org_name,ld.shop_name,receiptAddress,ld.receipt_name ,ld.receipt_phone
+        order by ld.create_time
+    </select>
+
+    <select id="selectAdminSendList" parameterType = "com.longfor.c10.lzyx.logistics.entity.dto.DeliverySendListReq" resultType="com.longfor.c10.lzyx.logistics.entity.dto.admin.DeliverySendListVO">
+        select DISTINCT
+        o.org_name operOrgName,
+        o.org_id operOrgId,
+        o.shop_name shopName,
+        d.id deliveryId,
+        o.child_order_id orderNo,
+        o.biz_channel_code as bizChannelCode,
+        o.order_desc as orderDesc,
+        d.delivery_no deliveryNo,
+        d.logistics_status logisticsStatus,
+        GROUP_CONCAT(distinct d.goods_ids) goodsIds,
+        d.receipt_name receiptName,
+        d.receipt_phone receiptPhoneNumber,
+        DATE_FORMAT(d.sign_time,'%Y-%m-%d %H:%i:%s') as signTime,
+        DATE_FORMAT(d.delivery_time,'%Y-%m-%d %H:%i:%s') as deliveryTime,
+        d.company_code companyCode,
+        d.logistics_type as logisticsType,
+        d.shop_logistics_id shopLogisticsId,
+        CONCAT_WS('',d.receipt_province,d.receipt_city,d.receipt_area,d.receipt_address) receiptAddress,
+        DATE_FORMAT(o.create_time,'%Y-%m-%d %H:%i:%s') as orderCreateTime
+        from logistics_delivery d
+        inner join logistics_order o on o.id = d.logistics_order_id and o.delete_status = '0'
+        inner join logistics_order_goods g on g.logistics_order_id = d.logistics_order_id and g.logistics_delivery_id = d.id and g.delete_status = '0'
+        <where>
+            d.delete_status = '0'
+            and d.delivery_no is not null
+            and d.delivery_no !=''
+            and d.if_cancel = '0'
+            and d.goods_ids != ''
+            <choose>
+                <when test="req.deliveryNo != null and req.deliveryNo != ''">
+                    and d.delivery_no = #{req.deliveryNo}
+                </when>
+                <otherwise>
+                    and d.delivery_no is not null and d.delivery_no != ''
+                </otherwise>
+            </choose>
+            <if test="req.startDeliveryTime != null">
+                AND d.delivery_time <![CDATA[>=]]> #{req.startDeliveryTime}
+            </if>
+            <if test="req.endDeliveryTime != null">
+                AND d.delivery_time <![CDATA[<=]]> #{req.endDeliveryTime}
+            </if>
+            <if test="req.logisticsStatus != null">
+                and d.logistics_status = #{req.logisticsStatus}
+            </if>
+            <if test="req.logisticsType != null">
+                <choose>
+                    <!--平台京东 -->
+                    <when test="req.logisticsType == 1">
+                        and d.logistics_type = 1 and d.company_code = 'jd'
+                    </when>
+                    <!--平台顺丰 -->
+                    <when test="req.logisticsType == 2">
+                        and d.logistics_type = 1 and d.company_code = 'shunfeng'
+                    </when>
+                    <!--商家顺丰 -->
+                    <when test="req.logisticsType == 3">
+                        and d.logistics_type = 2 and d.company_code = 'shunfeng' and d.shop_logistics_id is not null and d.shop_logistics_id != ''
+                    </when>
+                    <!--其他 -->
+                    <when test="req.logisticsType == 4">
+                        and d.logistics_type = 2 and (d.shop_logistics_id is null or d.shop_logistics_id = '')
+                    </when>
+                    <otherwise>
+                        and 1 = 0
+                    </otherwise>
+                </choose>
+            </if>
+            <if test="req.goodsName != null and req.goodsName != ''">
+                and d.id in (
+                select logistics_delivery_id from logistics_order_goods
+                where goods_name like concat('%',#{req.goodsName},'%')
+                and logistics_delivery_id is not null
+                group by logistics_delivery_id
+                )
+            </if>
+            <if test="req.orgId != null and req.orgId != ''">
+                AND o.org_id = #{req.orgId}
+            </if>
+            <if test="req.orgIds != null and req.orgIds.size() > 0">
+                AND o.org_id in
+                <foreach collection="req.orgIds" index="index" item="item" open="(" separator="," close=")">
+                    #{item}
+                </foreach>
+            </if>
+            <if test="req.shopId != null and req.shopId != ''">
+                AND o.shop_id = #{req.shopId}
+            </if>
+            <if test="req.shopIds != null and req.shopIds.size() > 0">
+                AND o.shop_id in
+                <foreach collection="req.shopIds" index="index" item="item" open="(" separator="," close=")">
+                    #{item}
+                </foreach>
+            </if>
+            <if test="req.childOrderId != null and req.childOrderId != ''">
+                and o.child_order_id = #{req.childOrderId}
+            </if>
+            <if test="req.shopName != null and req.shopName != ''">
+                and o.shop_name like concat('%',#{req.shopName},'%')
+            </if>
+            <if test="req.startOrderCreateTime != null and req.startOrderCreateTime != ''" >
+                and o.create_time &gt;= #{req.startOrderCreateTime}
+            </if>
+
+            <if test="req.endOrderCreateTime != null and req.endOrderCreateTime != ''" >
+                and o.create_time &lt;=  #{req.endOrderCreateTime}
+            </if>
+            <if test="req.bizChannelCodes != null and req.bizChannelCodes.size() > 0">
+                AND o.biz_channel_code in
+                <foreach collection="req.bizChannelCodes" index="index" item="item" open="(" separator="," close=")">
+                    #{item}
+                </foreach>
+            </if>
+        </where>
+        GROUP BY d.id
+        order by d.create_time desc
+    </select>
+    <select id="getOvertimeSignedList" parameterType="com.longfor.c10.lzyx.logistics.entity.dto.LogisticsDeliveryOvertimeSignedReqData" resultType="com.longfor.c10.lzyx.logistics.entity.dto.LogisticsDeliveryOvertimeSignedDTO">
+    SELECT
+    t.*
+    FROM (
+        SELECT
+		DISTINCT
+		lo.id as logisticsOrderId,
+		lo.child_order_id as childOrderId,
+		le.delivery_no as deliveryNo,
+		le.logistics_status,
+		le.sign_time as signTime
+		FROM
+		logistics_order lo
+		LEFT JOIN logistics_order_goods log on log.logistics_order_id = lo.id
+		LEFT JOIN logistics_delivery le on le.logistics_order_id = lo.id
+		WHERE lo.delete_status = 0
+		AND le.delete_status = 0
+		AND le.if_cancel = 0
+		AND lo.sign_confirm_flag = 0
+		AND log.logistics_delivery_id IS NOT NULL
+		AND log.logistics_delivery_id != ''
+		AND log.logistics_delivery_id = le.id
+		AND le.logistics_status = 6
+		AND lo.goods_order_status = 13
+		GROUP BY lo.child_order_id
+    ) t
+    WHERE TIMESTAMPDIFF(SECOND,t.signTime,now()) &gt;= 7 * 24 * 3600
+    </select>
+    <select id="getOvertimeSignedCount" resultType="long">
+        SELECT COUNT(t.childOrderId)
+        FROM (
+                SELECT
+                DISTINCT
+                lo.id as logisticsOrderId,
+                lo.child_order_id as childOrderId,
+                le.delivery_no as deliveryNo,
+                le.logistics_status,
+                max(le.sign_time) as signTime
+                FROM
+                logistics_order lo
+                LEFT JOIN logistics_order_goods log on log.logistics_order_id = lo.id
+                LEFT JOIN logistics_delivery le on le.logistics_order_id = lo.id
+                WHERE lo.delete_status = 0
+                AND le.delete_status = 0
+                AND le.if_cancel = 0
+                AND lo.sign_confirm_flag = 0
+                AND log.logistics_delivery_id IS NOT NULL
+                AND log.logistics_delivery_id != ''
+                AND log.logistics_delivery_id = le.id
+                AND le.logistics_status = 6
+                AND lo.goods_order_status = 13
+                GROUP BY lo.child_order_id
+        ) t
+        WHERE TIMESTAMPDIFF(SECOND,t.signTime,now()) &gt;= 7 * 24 * 3600
+    </select>
+</mapper>

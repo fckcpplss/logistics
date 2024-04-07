@@ -1,0 +1,120 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.longfor.c10.lzyx.logistics.dao.mapper.LogisticsFeeMapper">
+    <select id="getLogisticsFeeList" resultType="com.longfor.c10.lzyx.logistics.entity.dto.admin.FeeVO">
+        SELECT
+        distinct f.id,
+        f.delivery_no AS deliveryNo,
+        f.child_order_id AS childOrderId,
+        o.shop_name as shopName,
+        o.biz_channel_code as bizChannelCode,
+        o.order_desc as orderDesc,
+        f.org_id AS orgId,
+        f.org_name AS orgName,
+        f.logistics_company_name AS logisticsCompanyName,
+        f.fee_bearer AS feeBearer,
+        f.standard_fee AS standardFee,
+        f.discount_fee AS discountFee,
+        d.create_time AS createTime,
+        d.collect_time AS pickupTime,
+        d.sign_time AS signTime,
+        f.goods_name AS goodsName,
+        d.logistics_status AS logisticsStatus,
+        f.logistics_account AS logisticsAccount,
+        f.ship_address AS shipAddress,
+        f.delivery_address AS deliveryAddress,
+        f.payment_type as paymentType,
+        f.settlement_type as settlementType,
+        d.company_code as companyCode,
+        d.shop_logistics_id as shopLogisticsId,
+        d.logistics_type as logisticsType
+        FROM
+        logistics_fee f left join logistics_delivery d on f.delivery_no = d.delivery_no LEFT JOIN logistics_order o on
+        f.child_order_id = o.child_order_id
+        where  f.delete_status = 0
+        <if test="req.orgIds != null and req.orgIds.size() > 0 ">
+            and f.org_id in
+            <foreach collection="req.orgIds" index="index" item="item" open="(" separator="," close=")">
+                #{item}
+            </foreach>
+        </if>
+        <if test="req.orgId != null and req.orgId != ''">
+            and f.org_id  = #{req.orgId}
+        </if>
+        <if test="req.deliveryNo != null and req.deliveryNo != ''">
+            and f.delivery_no = #{req.deliveryNo}
+        </if>
+        <if test="req.childOrderId != null and req.childOrderId != ''">
+            and f.child_order_id = #{req.childOrderId}
+        </if>
+        <if test="req.feeBearer != null">
+            and f.fee_bearer = #{req.feeBearer}
+        </if>
+        <if test="req.signTimeStart != null and req.signTimeStart != '' and req.signTimeEnd != null and req.signTimeEnd != ''">
+            and d.sign_time between #{req.signTimeStart} and #{req.signTimeEnd}
+        </if>
+        <if test="req.createTimeStart != null and req.createTimeStart != '' and req.createTimeEnd != null and req.createTimeEnd != ''">
+            and d.create_time between #{req.createTimeStart} and #{req.createTimeEnd}
+        </if>
+        <if test="req.pickupTimeStart != null and req.pickupTimeStart != '' and req.pickupTimeEnd != null and req.pickupTimeEnd != ''">
+            and d.collect_time between #{req.pickupTimeStart} and #{req.pickupTimeEnd}
+        </if>
+        <if test="req.shopId != null and req.shopId != ''">
+            and f.shop_id = #{req.shopId}
+        </if>
+        <if test="req.settlementType != null and req.settlementType != ''">
+            and f.settlement_type = #{req.settlementType}
+        </if>
+        <if test="req.paymentType != null and req.paymentType != ''">
+            and f.payment_type = #{req.paymentType}
+        </if>
+        <if test="req.shopName != null and req.shopName != ''">
+            and o.shop_name LIKE CONCAT('%',#{req.shopName},'%')
+        </if>
+        <if test="req.goodsName != null and req.goodsName != ''">
+            and f.goods_name LIKE CONCAT('%',#{req.goodsName},'%')
+        </if>
+        <if test="req.logisticsCompanyName != null and req.logisticsCompanyName != ''">
+            and f.logistics_company_name LIKE CONCAT('%',#{req.logisticsCompanyName},'%')
+        </if>
+        <if test="req.logisticsType != null and req.logisticsType != ''">
+            and d.logistics_type = #{req.logisticsType}
+        </if>
+        <if test="req.companyCode != null and req.companyCode.size() > 0 ">
+            and d.company_code in
+            <foreach collection="req.companyCode" index="index" item="item" open="(" separator="," close=")">
+                #{item}
+            </foreach>
+        </if>
+        <if test="req.logisticsAccount != null">
+            <choose>
+                <!--平台顺丰 -->
+                <when test="req.logisticsAccount == 1">
+                    and d.logistics_type = 1 and d.company_code = 'shunfeng'
+                </when>
+                <!--平台京东 -->
+                <when test="req.logisticsAccount == 2">
+                    and d.logistics_type = 1 and d.company_code = 'jd'
+                </when>
+                <!--商家顺丰 -->
+                <when test="req.logisticsAccount == 3">
+                    and d.logistics_type = 2 and d.company_code = 'shunfeng' and d.shop_logistics_id is not null and d.shop_logistics_id != ''
+                </when>
+                <!--其他 -->
+                <when test="req.logisticsAccount == 4">
+                    and d.logistics_type = 2 and (d.shop_logistics_id is null or d.shop_logistics_id = '')
+                </when>
+                <otherwise>
+                    and 1 = 0
+                </otherwise>
+            </choose>
+        </if>
+        <if test="req.bizChannelCodes != null and req.bizChannelCodes.size() > 0">
+            AND o.biz_channel_code in
+            <foreach collection="req.bizChannelCodes" index="index" item="item" open="(" separator="," close=")">
+                #{item}
+            </foreach>
+        </if>
+        order by createTime desc
+    </select>
+</mapper>
